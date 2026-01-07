@@ -1,50 +1,46 @@
-# Welcome to your Expo app 👋
+# Aveiro Gastronomia App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicação mobile inspirada no Letterboxd para promover os produtos gastronómicos tradicionais de Aveiro em ambiente dark mode.
 
-## Get started
+## Stack principal
 
-1. Install dependencies
+- Expo 54 (React Native 0.81) com React Navigation
+- Design system próprio (tokens em src/styles)
+- TanStack Query para cache e sincronização de dados remotos
+- react-native-maps + filtros cromáticos para o mapa temático
 
-   ```bash
-   npm install
-   ```
+## APIs integradas
 
-2. Start the app
+| Fonte | Uso |
+| --- | --- |
+| Wikipedia API | Resumos históricos e descrições dos produtos |
+| Wikimedia Commons API | Imagens editoriais e património |
+| OpenStreetMap + Overpass API | Pontos de interesse filtráveis no mapa |
 
-   ```bash
-   npx expo start
-   ```
+## Como correr
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+npm install
+npm run lint        # opcional
+npx expo start      # iOS / Android / Web
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Estrutura
 
-## Learn more
+```
+src/
+  components/   UI reutilizável (cards, tab bars, markers)
+  config/       Query Client e providers globais
+  data/         Seeds e descrições das fontes
+  hooks/        TanStack Query hooks
+  navigation/   Bottom Tab Navigator
+  screens/      Home, Explorar, Mapa, Perfil
+  services/     Wikipedia, Commons, Overpass gateways
+  styles/       Paleta, espaçamentos e tipografia
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Próximos passos sugeridos
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Persistir o cache do TanStack Query em AsyncStorage para uso offline.
+2. Adicionar ecrãs de detalhe (produto, história, local) e partilha social.
+3. Sincronizar moodboards e estatísticas com backend próprio ou CMS.
