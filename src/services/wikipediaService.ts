@@ -1,7 +1,33 @@
 
 const REQUEST_TIMEOUT_MS = 3000;
-// IMPORTANTE: Usa um e-mail real ou fictício mas bem formatado
-const USER_AGENT = 'RemarAoTacho/1.0 (contact: info@remaraotacho.com; educational project)';
+
+const USER_AGENT = process.env.EXPO_PUBLIC_USER_AGENT || "";
+
+/**
+ * Cleans HTML markup from text by removing tags between < and >
+ * Uses startsWith/endsWith to detect and filter HTML elements
+ */
+const cleanHTMLTags = (text: string): string => {
+  if (!text || typeof text !== 'string') return text;
+  
+  let cleaned = '';
+  let i = 0;
+  
+  while (i < text.length) {
+    if (text[i].startsWith('<')) {
+      // Found opening bracket, find closing bracket
+      const closeIndex = text.indexOf('>', i);
+      if (closeIndex !== -1) {
+        i = closeIndex + 1; // Skip the entire tag
+        continue;
+      }
+    }
+    cleaned += text[i];
+    i++;
+  }
+  
+  return cleaned.trim();
+};
 
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeoutMs = REQUEST_TIMEOUT_MS) => {
   const controller = new AbortController();
@@ -42,7 +68,7 @@ export async function fetchWikipediaSummary(title: string, lang: 'pt' | 'en' = '
 
     const data = await response.json() as WikipediaSummaryResponse;
     return {
-      title: data.displaytitle ?? data.title,
+      title: cleanHTMLTags(data.displaytitle ?? data.title),
       description: data.description,
       extract: data.extract,
       url: data.content_urls?.mobile?.page,
@@ -77,4 +103,15 @@ export async function searchCommonsImage(term: string | string[], targetWidth = 
       attribution: image.extmetadata?.Artist?.value || undefined,
     };
   } catch { return null; }
+}
+
+export async function PortugueseMeals() {
+  try {
+    const result = await fetch("https://www.themealdb.com/api/json/v1/1/filter.php?a=Portuguese", {method: "GET"});
+    const data = await result.json();
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.warn("Failed to fetch meals", error);
+  }
 }

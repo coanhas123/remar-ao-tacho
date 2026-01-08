@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
 import { Image, ImageBackground, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+
 export const MoodboardDetailScreen = () => {
   const theme = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
