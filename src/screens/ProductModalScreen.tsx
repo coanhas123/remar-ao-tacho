@@ -1,10 +1,22 @@
 import { useProductDetail } from '@/src/hooks/useContentQueries';
 import { RootStackParamList } from '@/src/navigation';
+import { DEFAULT_IMAGE } from '@/src/services/contentGateway';
 import { useTheme } from '@/src/styles';
+import { Ionicons } from '@expo/vector-icons'; // Importar ícones
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as WebBrowser from 'expo-web-browser';
-import { ActivityIndicator, ImageBackground, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react'; // Adicionado useState
+import { ActivityIndicator, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const resolveImageSource = (value?: string | null): string => {
+  if (!value || typeof value !== 'string') return DEFAULT_IMAGE;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.startsWith('<')) {
+    return DEFAULT_IMAGE;
+  }
+  return trimmed;
+};
 
 export const ProductModalScreen = () => {
   const theme = useTheme();
@@ -14,6 +26,9 @@ export const ProductModalScreen = () => {
   const productQuery = useProductDetail(productId);
   const product = productQuery.data;
 
+  // Estado local para o Like (em prod isto viria de um Context ou DB)
+  const [isLiked, setIsLiked] = useState(false);
+
   const handleOpenSource = async () => {
     if (product?.sourceUrl) {
       await WebBrowser.openBrowserAsync(product.sourceUrl);
@@ -22,7 +37,7 @@ export const ProductModalScreen = () => {
 
   if (productQuery.isLoading && !product) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+      <View style={styles.center}>
         <ActivityIndicator color={theme.colors.statusInfo} />
       </View>
     );
@@ -30,7 +45,7 @@ export const ProductModalScreen = () => {
 
   if (!product) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+      <View style={styles.center}>
         <Text style={{ color: theme.colors.textMuted }}>Produto indisponível.</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: theme.spacing.md }}>
           <Text style={{ color: theme.colors.accentPrimary }}>Fechar</Text>
@@ -41,71 +56,89 @@ export const ProductModalScreen = () => {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background }} contentContainerStyle={{ paddingBottom: theme.spacing.xxl }}>
-      <ImageBackground source={{ uri: product.image }} style={{ height: 300 }} imageStyle={{ opacity: 0.85 }}>
-        <View style={{ flex: 1, justifyContent: 'space-between', padding: theme.spacing.lg, backgroundColor: 'rgba(5,7,9,0.4)' }}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ alignSelf: 'flex-start', paddingVertical: theme.spacing.xs }}>
-            <Text style={{ color: theme.colors.white }}>Fechar</Text>
-          </TouchableOpacity>
+      
+      {/* HEADER COM IMAGEM E ÍCONES DE AÇÃO */}
+      <ImageBackground source={{ uri: resolveImageSource(product.image) }} style={styles.heroImage}>
+        <View style={styles.heroOverlay}>
+          {/* BARRA DE TOPO DO MODAL */}
+          <View style={styles.topBar}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconCircle}>
+              <Ionicons name="close" size={24} color="black" />
+            </TouchableOpacity>
+            
+            <View style={styles.rightActions}>
+              {/* ÍCONE DE MOODBOARD */}
+              <TouchableOpacity style={styles.iconCircle} onPress={() => console.log("Abrir modal moodboard")}>
+                <Ionicons name="add" size={26} color="black" />
+              </TouchableOpacity>
+              
+              {/* ÍCONE DE LIKE */}
+              <TouchableOpacity style={styles.iconCircle} onPress={() => setIsLiked(!isLiked)}>
+                <Ionicons name={isLiked ? "heart" : "heart-outline"} size={24} color={isLiked ? "#FF5252" : "black"} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <View>
-            <Text style={{ color: theme.colors.white, fontFamily: theme.typography.fonts.display, fontSize: theme.typography.sizes.xl }}>{product.title}</Text>
-            <Text style={{ color: theme.colors.white, marginTop: theme.spacing.xs }}>{product.subtitle}</Text>
+            <Text style={styles.heroTitle}>{product.title}</Text>
+            <Text style={styles.heroSubtitle}>{product.subtitle}</Text>
           </View>
         </View>
       </ImageBackground>
 
       <View style={{ padding: theme.spacing.lg }}>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: theme.spacing.md }}>
-          <View
-            style={{
-              paddingHorizontal: theme.spacing.sm,
-              paddingVertical: theme.spacing.xs,
-              borderRadius: theme.radii.pill,
-              backgroundColor: theme.colors.accentPrimary,
-              marginRight: theme.spacing.sm,
-            }}
-          >
-            <Text style={{ color: theme.colors.black, fontFamily: theme.typography.fonts.bodyMedium }}>{product.category.toUpperCase()}</Text>
+        {/* TAGS */}
+        <View style={styles.tagRow}>
+          <View style={[styles.categoryTag, { backgroundColor: theme.colors.accentPrimary }]}>
+            <Text style={styles.categoryText}>{product.category.toUpperCase()}</Text>
           </View>
           {product.tags?.map((tag) => (
-            <View
-              key={tag}
-              style={{
-                paddingHorizontal: theme.spacing.sm,
-                paddingVertical: 2,
-                borderRadius: theme.radii.pill,
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                marginRight: theme.spacing.sm,
-                marginBottom: theme.spacing.sm,
-              }}
-            >
-              <Text style={{ color: theme.colors.textMuted, fontSize: theme.typography.sizes.xs }}>{tag}</Text>
+            <View key={tag} style={[styles.tag, { borderColor: theme.colors.border }]}>
+              <Text style={{ color: theme.colors.textMuted, fontSize: 12 }}>{tag}</Text>
             </View>
           ))}
         </View>
 
-        <Text style={{ color: theme.colors.text, fontSize: theme.typography.sizes.md, lineHeight: 24 }}>{product.description}</Text>
-        <Text style={{ color: theme.colors.textMuted, marginTop: theme.spacing.md }}>Onde provar: {product.location}</Text>
+        {/* DESCRIÇÃO */}
+        <Text style={[styles.description, { color: theme.colors.text }]}>{product.description}</Text>
+        
+        <View style={styles.locationBox}>
+          <Ionicons name="location-outline" size={18} color={theme.colors.textMuted} />
+          <Text style={{ color: theme.colors.textMuted, marginLeft: 5 }}>Onde provar: {product.location}</Text>
+        </View>
 
+        {/* BOTÃO WIKIPEDIA (MAIS DISCRETO) */}
         {product.sourceUrl && (
-          <TouchableOpacity
-            onPress={handleOpenSource}
-            style={{
-              marginTop: theme.spacing.lg,
-              paddingVertical: theme.spacing.md,
-              borderRadius: theme.radii.pill,
-              backgroundColor: theme.colors.accentPrimary,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: theme.colors.black, fontFamily: theme.typography.fonts.bodyMedium }}>Ver artigo na Wikipedia</Text>
+          <TouchableOpacity onPress={handleOpenSource} style={[styles.wikiBtn, { backgroundColor: '#eee' }]}>
+            <Ionicons name="globe-outline" size={20} color="black" />
+            <Text style={styles.wikiBtnText}>Ler mais na Wikipedia</Text>
           </TouchableOpacity>
         )}
 
         {product.imageAttribution && (
-          <Text style={{ color: theme.colors.textMuted, marginTop: theme.spacing.sm }}>Créditos: {product.imageAttribution}</Text>
+          <Text style={styles.attribution}>Créditos: {product.imageAttribution}</Text>
         )}
       </View>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  heroImage: { height: 350 },
+  heroOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', padding: 20, justifyContent: 'space-between' },
+  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 },
+  rightActions: { flexDirection: 'row', gap: 10 },
+  iconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.9)', justifyContent: 'center', alignItems: 'center' },
+  heroTitle: { color: 'white', fontSize: 28, fontWeight: 'bold' },
+  heroSubtitle: { color: 'white', fontSize: 16, marginTop: 5, opacity: 0.9 },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20, gap: 8 },
+  categoryTag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  categoryText: { fontSize: 10, fontWeight: 'bold' },
+  tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
+  description: { fontSize: 16, lineHeight: 26 },
+  locationBox: { flexDirection: 'row', alignItems: 'center', marginTop: 20 },
+  wikiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 30, padding: 15, borderRadius: 15 },
+  wikiBtnText: { fontWeight: '600' },
+  attribution: { color: '#aaa', fontSize: 10, marginTop: 20, textAlign: 'center' }
+});

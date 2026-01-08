@@ -50,4 +50,5 @@ export interface Moodboard {
   description?: string;
   productIds?: string[];
   updatedAt?: string;
+  products?: Product[];
 }

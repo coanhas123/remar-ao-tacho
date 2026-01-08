@@ -1,4 +1,5 @@
 import { aveiroBoundingBox, placeTypeFilters } from '@/src/data/contentSources';
+import { places as fallbackPlaces } from '@/src/data/mockData';
 import { Place, PlaceType } from '@/src/types/content';
 import { postForm } from './httpClient';
 
@@ -112,11 +113,9 @@ export async function fetchPlacesByTypes(types: PlaceType[]): Promise<Place[]> {
     placeCache.set(cacheKey, { timestamp: now, data: payload });
     return payload;
   } catch (error) {
-    if (cachedEntry) {
-      console.warn('Overpass request failed, serving cached data', error);
-      return cachedEntry.data;
-    }
-    throw error;
+    const fallback = cachedEntry?.data?.length ? cachedEntry.data : fallbackPlaces.filter((place) => types.includes(place.type));
+    console.warn('Overpass request failed, serving fallback data', error);
+    return fallback;
   }
 }
 

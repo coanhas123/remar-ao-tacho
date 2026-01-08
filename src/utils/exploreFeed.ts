@@ -21,7 +21,7 @@ export interface ExploreFeedOptions {
   perTypeLimit?: Partial<Record<ExploreFeedItemType, number>>;
 }
 
-const DEFAULT_TEMPLATE: ExploreFeedItemType[] = ['product', 'story', 'place', 'product', 'moodboard', 'story'];
+const DEFAULT_TEMPLATE: ExploreFeedItemType[] = ['product', 'story', 'place', 'place', 'moodboard'];
 const DEFAULT_LIMITS: Record<ExploreFeedItemType, number> = {
   product: 4,
   story: 3,
@@ -48,8 +48,26 @@ export function shuffleWithSeed<T>(items: T[], seed: number): T[] {
   return array;
 }
 
+const FALLBACK_WEEKDAYS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+const FALLBACK_MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+const formatDateLabel = (today: Date): string => {
+  if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
+    try {
+      return new Intl.DateTimeFormat('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' }).format(today);
+    } catch (error) {
+      console.warn('Intl formatter failed, falling back to manual date label.', error);
+    }
+  }
+
+  const weekday = FALLBACK_WEEKDAYS[today.getDay()] ?? '';
+  const month = FALLBACK_MONTHS[today.getMonth()] ?? '';
+  return `${weekday} · ${today.getDate()} ${month}`.trim();
+};
+
 export function getDailySeed() {
-  const todayKey = new Date().toISOString().split('T')[0];
+  const today = new Date();
+  const todayKey = today.toISOString().split('T')[0];
   let hash = 0;
   for (let i = 0; i < todayKey.length; i += 1) {
     hash = (hash << 5) - hash + todayKey.charCodeAt(i);
@@ -57,7 +75,7 @@ export function getDailySeed() {
   }
   return {
     seed: Math.abs(hash) || 1,
-    label: new Intl.DateTimeFormat('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()),
+    label: formatDateLabel(today),
   };
 }
 
@@ -74,26 +92,26 @@ export function createExploreFeed(source: ExploreFeedSource, options: ExploreFee
   } satisfies Record<ExploreFeedItemType, any[]>;
 
   const feed: ExploreFeedItem[] = [];
-  let cursor = 0;
   const maxIterations = 50;
+  let iterations = 0;
 
-  while (cursor < maxIterations && Object.values(pools).some((collection) => collection.length > 0)) {
-    const slotType = template[cursor % template.length];
-    const availablePool = pools[slotType];
+  while (iterations < maxIterations) {
+    let appendedInCycle = false;
 
-    if (availablePool.length) {
-      const item = availablePool.shift()!;
-      feed.push({ type: slotType, data: item } as ExploreFeedItem);
-    } else {
-      const fallbackType = (Object.keys(pools) as ExploreFeedItemType[]).find((type) => pools[type].length);
-      if (!fallbackType) {
-        break;
+    for (const slotType of template) {
+      const pool = pools[slotType];
+      if (pool?.length) {
+        const item = pool.shift()!;
+        feed.push({ type: slotType, data: item } as ExploreFeedItem);
+        appendedInCycle = true;
       }
-      const item = pools[fallbackType].shift()!;
-      feed.push({ type: fallbackType, data: item } as ExploreFeedItem);
     }
 
-    cursor += 1;
+    if (!appendedInCycle) {
+      break;
+    }
+
+    iterations += 1;
   }
 
   return feed;

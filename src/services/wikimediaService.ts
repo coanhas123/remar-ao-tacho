@@ -1,84 +1,123 @@
-import { fetchJson, safeParse } from './httpClient';
+const REQUEST_TIMEOUT_MS = 3000;
+const USER_AGENT = 'RemarAoTacho/1.0';
+
+interface CommonsImageInfo {
+  url: string;
+  thumburl?: string;
+  descriptionurl?: string;
+  extmetadata?: Record<string, { value: string }>;
+  width?: number;
+  height?: number;
+}
+
+interface CommonsQueryPage {
+  title: string;
+  index?: number;
+  imageinfo?: CommonsImageInfo[];
+}
 
 interface CommonsQueryResponse {
   query?: {
-    pages: Record<
-      string,
-      {
-        title: string;
-        pageimage?: string;
-        imageinfo?: {
-          url: string;
-          descriptionurl?: string;
-          thumburl?: string;
-          extmetadata?: Record<string, { value: string }>;
-        }[];
-      }
-    >;
+    pages: Record<string, CommonsQueryPage>;
   };
 }
 
-export interface CommonsImage {
-  title: string;
+export interface WikimediaImageResult {
   url: string;
   originalUrl?: string;
-  descriptionUrl?: string;
   attribution?: string;
+  descriptionUrl?: string;
+  width?: number;
+  height?: number;
 }
 
-const COMMONS_API = 'https://commons.wikimedia.org/w/api.php';
-
-type CommonsSearchTerms = string | string[];
-
-export async function searchCommonsImage(terms: CommonsSearchTerms, targetWidth = 1200): Promise<CommonsImage | null> {
-  const queue = Array.isArray(terms) ? terms : [terms];
-
-  for (const term of queue) {
-    const image = await fetchCommonsImage(term, targetWidth);
-    if (image) {
-      return image;
-    }
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeoutMs = REQUEST_TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
   }
+};
 
-  return null;
-}
+const stripHtml = (value?: string) => {
+  if (!value) return undefined;
+  return value.replace(/<[^>]+>/g, '').trim() || undefined;
+};
 
-async function fetchCommonsImage(term: string, targetWidth: number): Promise<CommonsImage | null> {
+const buildAttribution = (metadata?: Record<string, { value: string }>) => {
+  if (!metadata) return undefined;
+  const artist = stripHtml(metadata.Artist?.value);
+  const license = stripHtml(metadata.LicenseShortName?.value);
+  const credit = stripHtml(metadata.Credit?.value);
+
+  return [artist, license ?? credit].filter(Boolean).join(' • ') || undefined;
+};
+
+async function queryCommons(term: string, targetWidth: number) {
   const params = new URLSearchParams({
     action: 'query',
     generator: 'search',
     gsrlimit: '1',
     gsrsearch: term,
     prop: 'imageinfo',
-    iiprop: 'url|extmetadata',
+    iiprop: 'url|extmetadata|dimensions',
     iiurlwidth: String(targetWidth),
-    iiurlheight: String(Math.round(targetWidth * 0.75)),
     format: 'json',
     origin: '*',
   });
 
-  const data = await safeParse(fetchJson<CommonsQueryResponse>(`${COMMONS_API}?${params.toString()}`));
+  const response = await fetchWithTimeout(`https://commons.wikimedia.org/w/api.php?${params.toString()}`, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': USER_AGENT,
+    },
+  });
 
-  if (!data?.query?.pages) {
+  if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
     return null;
   }
 
-  const firstPage = Object.values(data.query.pages)[0];
-  const image = firstPage.imageinfo?.[0];
+  const data = (await response.json()) as CommonsQueryResponse;
+  const pages = data.query?.pages;
+  if (!pages) return null;
 
-  if (!image?.url) {
-    return null;
-  }
+  const orderedPages = Object.values(pages).sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+  const candidate = orderedPages.find((page) => page.imageinfo?.length);
+  if (!candidate) return null;
 
-  const artist = image.extmetadata?.Artist?.value;
-  const license = image.extmetadata?.LicenseShortName?.value;
-  const attribution = [artist, license].filter(Boolean).join(' • ');
-
+  const image = candidate.imageinfo![0];
   return {
-    title: firstPage.title,
     url: image.thumburl ?? image.url,
     originalUrl: image.url,
     descriptionUrl: image.descriptionurl,
-    attribution: attribution || undefined,
-  };
+    attribution: buildAttribution(image.extmetadata),
+    width: image.width,
+    height: image.height,
+  } satisfies WikimediaImageResult;
+}
+
+export async function searchCommonsImage(term: string | string[], targetWidth = 1200): Promise<WikimediaImageResult | null> {
+  const terms = (Array.isArray(term) ? term : [term]).map((value) => value?.trim()).filter(Boolean) as string[];
+  if (!terms.length) {
+    return null;
+  }
+
+  for (const candidate of terms) {
+    try {
+      const result = await queryCommons(candidate, targetWidth);
+      if (result) {
+        return result;
+      }
+    } catch (error) {
+      console.warn(`Commons image lookup failed for "${candidate}"`, error);
+    }
+  }
+
+  return null;
 }

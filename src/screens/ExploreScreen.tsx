@@ -16,32 +16,41 @@ export const ExploreScreen = () => {
   const productQuery = useHeroProducts();
   const storiesQuery = useStoriesFeed();
   const placesQuery = usePlacesCatalog(['loja', 'restaurante', 'historico']);
-  const productCollection = productQuery.data?.length ? productQuery.data : fallbackProducts;
-  const storyCollection = storiesQuery.data?.length ? storiesQuery.data : fallbackStories;
-  const placeCollection = placesQuery.data?.length ? placesQuery.data : fallbackPlaces;
   const dailySeed = useMemo(() => getDailySeed(), []);
-  const exploreFeed = useMemo(
-    () =>
-      createExploreFeed(
-        {
-          products: productCollection,
-          stories: storyCollection,
-          places: placeCollection,
-          moodboards,
-        },
-        {
-          seed: dailySeed.seed,
-        },
-      ),
-    [productCollection, storyCollection, placeCollection, dailySeed.seed],
-  );
+  const exploreFeed = useMemo(() => {
+    const products = productQuery.data?.length ? productQuery.data : fallbackProducts || [];
+    const stories = storiesQuery.data?.length ? storiesQuery.data : fallbackStories || [];
+    const places = placesQuery.data?.length ? placesQuery.data : fallbackPlaces || [];
+
+    return createExploreFeed(
+      {
+        products,
+        stories,
+        places,
+        moodboards,
+      },
+      {
+        seed: dailySeed.seed,
+      },
+    ) || [];
+  }, [productQuery.data, storiesQuery.data, placesQuery.data, dailySeed.seed]);
+  const safeExploreFeed = Array.isArray(exploreFeed) ? exploreFeed : [];
 
   const handleOpenProduct = (product: Product) => navigation.navigate('ProductModal', { productId: product.id });
   const handleOpenStory = (story: Story) => navigation.navigate('HistoryDetail', { storyId: story.id });
   const handleOpenMoodboard = (board: Moodboard) => navigation.navigate('MoodboardDetail', { moodboardId: board.id });
-  const handleOpenPlace = (_place: Place) => navigation.navigate('Mapa');
+  const handleOpenPlace = (_place: Place) => navigation.navigate('Tabs');
 
   const isAnyQueryLoading = productQuery.isFetching || storiesQuery.isFetching || placesQuery.isFetching;
+  const isLoadingState = isAnyQueryLoading && !safeExploreFeed.length;
+
+  if (isLoadingState) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+        <ActivityIndicator color={theme.colors.statusInfo} size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -59,7 +68,7 @@ export const ExploreScreen = () => {
           )}
         </View>
 
-        {exploreFeed.map((entry, index) => {
+        {(safeExploreFeed ?? []).map((entry, index) => {
           const key = `${entry.type}-${index}`;
           return (
             <View key={key} style={{ marginBottom: theme.spacing.lg }}>
