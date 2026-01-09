@@ -1,22 +1,29 @@
-import { productSources, storySources } from '@/src/data/contentSources';
-import { places as fallbackPlaces, products as fallbackProducts, stories as fallbackStories } from '@/src/data/mockData';
-import { Place, PlaceType, Product, Story } from '@/src/types/content';
-import { fetchPlacesByTypes } from './overpassService';
-import { fetchWikipediaSummary } from './wikipediaService';
-import { searchCommonsImage } from './wikimediaService';
+import { productSources, storySources } from "@/src/data/contentSources";
+import {
+  places as fallbackPlaces,
+  products as fallbackProducts,
+  stories as fallbackStories,
+} from "@/src/data/mockData";
+import { Place, PlaceType, Product, Story } from "@/src/types/content";
+import { fetchPlacesByTypes } from "./overpassService";
+import { searchCommonsImage } from "./wikimediaService";
+import { fetchWikipediaSummary } from "./wikipediaService";
 
-export const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60';
+export const DEFAULT_IMAGE =
+  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60";
 
 const sanitizeImageUrl = (value?: string | null): string | null => {
-  if (!value || typeof value !== 'string') return null;
+  if (!value || typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (!trimmed || trimmed.startsWith('<')) {
+  if (!trimmed || trimmed.startsWith("<")) {
     return null;
   }
   return trimmed;
 };
 
-const resolveImageSource = (...candidates: (string | null | undefined)[]): string => {
+const resolveImageSource = (
+  ...candidates: (string | null | undefined)[]
+): string => {
   for (const candidate of candidates) {
     const sanitized = sanitizeImageUrl(candidate);
     if (sanitized) {
@@ -26,7 +33,9 @@ const resolveImageSource = (...candidates: (string | null | undefined)[]): strin
   return DEFAULT_IMAGE;
 };
 
-async function buildProductFromSource(source: (typeof productSources)[number]): Promise<Product> {
+async function buildProductFromSource(
+  source: (typeof productSources)[number]
+): Promise<Product> {
   try {
     const [summary, image] = await Promise.all([
       fetchWikipediaSummary(source.wikiTitle),
@@ -36,10 +45,11 @@ async function buildProductFromSource(source: (typeof productSources)[number]): 
     const resolvedImage = resolveImageSource(
       source.fallbackImage,
       image?.url,
-      summary?.thumbnail,
+      summary?.thumbnail
     );
     const commonsImageSanitized = sanitizeImageUrl(image?.url);
-    const usedCommonsImage = commonsImageSanitized && resolvedImage === commonsImageSanitized;
+    const usedCommonsImage =
+      commonsImageSanitized && resolvedImage === commonsImageSanitized;
 
     return {
       id: source.id,
@@ -58,8 +68,8 @@ async function buildProductFromSource(source: (typeof productSources)[number]): 
     return {
       id: source.id,
       title: source.fallbackTitle,
-      subtitle: source.fallbackSubtitle ?? '',
-      description: source.fallbackDescription ?? '',
+      subtitle: source.fallbackSubtitle ?? "",
+      description: source.fallbackDescription ?? "",
       image: resolveImageSource(source.fallbackImage),
       category: source.category,
       location: source.location,
@@ -70,20 +80,27 @@ async function buildProductFromSource(source: (typeof productSources)[number]): 
   }
 }
 
-async function buildStoryFromSource(source: (typeof storySources)[number]): Promise<Story> {
+async function buildStoryFromSource(
+  source: (typeof storySources)[number]
+): Promise<Story> {
   try {
     const [summary, image] = await Promise.all([
-      source.wikiTitle ? fetchWikipediaSummary(source.wikiTitle) : Promise.resolve(null),
-      source.commonsSearch ? searchCommonsImage(source.commonsSearch) : Promise.resolve(null),
+      source.wikiTitle
+        ? fetchWikipediaSummary(source.wikiTitle)
+        : Promise.resolve(null),
+      source.commonsSearch
+        ? searchCommonsImage(source.commonsSearch)
+        : Promise.resolve(null),
     ]);
 
     const resolvedImage = resolveImageSource(
       source.fallbackImage,
       image?.url,
-      summary?.thumbnail,
+      summary?.thumbnail
     );
     const commonsImageSanitized = sanitizeImageUrl(image?.url);
-    const usedCommonsImage = commonsImageSanitized && resolvedImage === commonsImageSanitized;
+    const usedCommonsImage =
+      commonsImageSanitized && resolvedImage === commonsImageSanitized;
 
     return {
       id: source.id,
@@ -103,7 +120,7 @@ async function buildStoryFromSource(source: (typeof storySources)[number]): Prom
       date: source.dateLabel,
       category: source.category,
       image: resolveImageSource(source.fallbackImage),
-      summary: source.fallbackSummary ?? '',
+      summary: source.fallbackSummary ?? "",
       sourceUrl: undefined,
       mediaAttribution: undefined,
     } satisfies Story;
@@ -111,11 +128,15 @@ async function buildStoryFromSource(source: (typeof storySources)[number]): Prom
 }
 
 export async function fetchHeroProducts(): Promise<Product[]> {
-  return Promise.all(productSources.map((source) => buildProductFromSource(source)));
+  return Promise.all(
+    productSources.map((source) => buildProductFromSource(source))
+  );
 }
 
 export async function fetchStoriesFeed(): Promise<Story[]> {
-  return Promise.all(storySources.map((source) => buildStoryFromSource(source)));
+  return Promise.all(
+    storySources.map((source) => buildStoryFromSource(source))
+  );
 }
 
 export async function fetchPlacesCatalog(types: PlaceType[]): Promise<Place[]> {
@@ -123,7 +144,7 @@ export async function fetchPlacesCatalog(types: PlaceType[]): Promise<Place[]> {
     const results = await fetchPlacesByTypes(types);
     return results;
   } catch (error) {
-    console.warn('Overpass request failed', error);
+    console.warn("Overpass request failed", error);
     return fallbackPlaces.filter((place) => types.includes(place.type));
   }
 }
@@ -155,3 +176,4 @@ export async function fetchStoryById(id: string): Promise<Story> {
 
   throw new Error(`História "${id}" não encontrada.`);
 }
+ 
