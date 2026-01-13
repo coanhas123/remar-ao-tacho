@@ -1,5 +1,4 @@
 import { aveiroBoundingBox, placeTypeFilters } from '@/src/data/contentSources';
-import { places as fallbackPlaces } from '@/src/data/mockData';
 import { Place, PlaceType } from '@/src/types/content';
 import { postForm } from './httpClient';
 
@@ -26,6 +25,7 @@ const placeDescriptions: Record<PlaceType, string> = {
   restaurante: 'Restaurantes e casas de caldeirada',
   historico: 'Património e espaços culturais',
 };
+
 
 const CACHE_TTL = 1000 * 60 * 5;
 const placeCache = new Map<string, { timestamp: number; data: Place[] }>();
@@ -56,7 +56,7 @@ function buildQuery(types: PlaceType[]): string {
     })
     .join('');
 
-  return `[out:json][timeout:25];(${selectors});out center qt;`;
+  return `[out:json][timeout:180];(${selectors});out center qt;`;
 }
 
 function formatAddress(tags?: Record<string, string>): string | undefined {
@@ -85,9 +85,52 @@ export async function fetchPlacesByTypes(types: PlaceType[]): Promise<Place[]> {
     return [];
   }
 
-  try {
-    const response = await postForm<OverpassResponse>(OVERPASS_ENDPOINT, `data=${encodeURIComponent(query)}`);
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await postForm<OverpassResponse>(OVERPASS_ENDPOINT, `data=${encodeURIComponent(query)}`);
 
+      const payload = response.elements
+        .filter((element) => (element.lat && element.lon) || element.center)
+        .map((element) => {
+          const tags = element.tags ?? {};
+          const inferredType = inferTypeFromTags(types, tags);
+          const latitude = element.lat ?? element.center?.lat ?? 0;
+          const longitude = element.lon ?? element.center?.lon ?? 0;
+
+          return {
+            id: `${element.id}`,
+            name: tags.name ?? tags['addr:street'] ?? 'Local sem nome',
+            description: tags.description ?? placeDescriptions[inferredType],
+            latitude,
+            longitude,
+            type: inferredType,
+            distance: '—',
+            address: formatAddress(tags),
+            tags: Object.keys(tags ?? {}),
+            sourceUrl: tags.wikidata ? `https://www.wikidata.org/wiki/${tags.wikidata}` : undefined,
+          };
+        });
+
+      placeCache.set(cacheKey, { timestamp: now, data: payload });
+      return payload;
+    } catch (error) {
+      lastError = error;
+      console.warn(`Overpass request attempt ${attempt + 1} failed:`, error);
+      if (attempt < 2) {
+      
+        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+      }
+    }
+  }
+  
+  console.error('Overpass request failed after 3 attempts. Trying alternative endpoint...', lastError);
+  
+  
+  try {
+    const query2 = buildQuery(types);
+    const response = await postForm<OverpassResponse>('https://overpass.kumi.systems/api/interpreter', `data=${encodeURIComponent(query2)}`);
+    
     const payload = response.elements
       .filter((element) => (element.lat && element.lon) || element.center)
       .map((element) => {
@@ -109,13 +152,13 @@ export async function fetchPlacesByTypes(types: PlaceType[]): Promise<Place[]> {
           sourceUrl: tags.wikidata ? `https://www.wikidata.org/wiki/${tags.wikidata}` : undefined,
         };
       });
-
+    
     placeCache.set(cacheKey, { timestamp: now, data: payload });
+    console.log('Alternative endpoint succeeded');
     return payload;
-  } catch (error) {
-    const fallback = cachedEntry?.data?.length ? cachedEntry.data : fallbackPlaces.filter((place) => types.includes(place.type));
-    console.warn('Overpass request failed, serving fallback data', error);
-    return fallback;
+  } catch (altError) {
+    console.error('Alternative endpoint also failed:', altError);
+    return [];
   }
 }
 

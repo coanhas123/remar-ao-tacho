@@ -1,12 +1,6 @@
 import { productSources, storySources } from "@/src/data/contentSources";
-import {
-  places as fallbackPlaces,
-  products as fallbackProducts,
-  stories as fallbackStories,
-} from "@/src/data/mockData";
 import { Place, PlaceType, Product, Story } from "@/src/types/content";
 import { fetchPlacesByTypes } from "./overpassService";
-import { searchCommonsImage } from "./wikimediaService";
 import { fetchWikipediaSummary } from "./wikipediaService";
 
 export const DEFAULT_IMAGE =
@@ -37,19 +31,13 @@ async function buildProductFromSource(
   source: (typeof productSources)[number]
 ): Promise<Product> {
   try {
-    const [summary, image] = await Promise.all([
-      fetchWikipediaSummary(source.wikiTitle),
-      searchCommonsImage(source.commonsSearch),
-    ]);
+    const summary = await fetchWikipediaSummary(source.wikiTitle);
 
     const resolvedImage = resolveImageSource(
       source.fallbackImage,
-      image?.url,
+      undefined,
       summary?.thumbnail
     );
-    const commonsImageSanitized = sanitizeImageUrl(image?.url);
-    const usedCommonsImage =
-      commonsImageSanitized && resolvedImage === commonsImageSanitized;
 
     return {
       id: source.id,
@@ -60,7 +48,7 @@ async function buildProductFromSource(
       category: source.category,
       location: source.location,
       sourceUrl: summary?.url,
-      imageAttribution: usedCommonsImage ? image?.attribution : undefined,
+      imageAttribution: undefined,
       tags: source.tags,
     } satisfies Product;
   } catch (error) {
@@ -84,23 +72,15 @@ async function buildStoryFromSource(
   source: (typeof storySources)[number]
 ): Promise<Story> {
   try {
-    const [summary, image] = await Promise.all([
-      source.wikiTitle
-        ? fetchWikipediaSummary(source.wikiTitle)
-        : Promise.resolve(null),
-      source.commonsSearch
-        ? searchCommonsImage(source.commonsSearch)
-        : Promise.resolve(null),
-    ]);
+    const summary = source.wikiTitle
+      ? await fetchWikipediaSummary(source.wikiTitle)
+      : null;
 
     const resolvedImage = resolveImageSource(
       source.fallbackImage,
-      image?.url,
+      undefined,
       summary?.thumbnail
     );
-    const commonsImageSanitized = sanitizeImageUrl(image?.url);
-    const usedCommonsImage =
-      commonsImageSanitized && resolvedImage === commonsImageSanitized;
 
     return {
       id: source.id,
@@ -110,7 +90,7 @@ async function buildStoryFromSource(
       image: resolvedImage,
       summary: summary?.extract ?? source.fallbackSummary,
       sourceUrl: summary?.url,
-      mediaAttribution: usedCommonsImage ? image?.attribution : undefined,
+      mediaAttribution: undefined,
     } satisfies Story;
   } catch (error) {
     console.warn(`Failed to build story ${source.id}`, error);
@@ -145,7 +125,7 @@ export async function fetchPlacesCatalog(types: PlaceType[]): Promise<Place[]> {
     return results;
   } catch (error) {
     console.warn("Overpass request failed", error);
-    return fallbackPlaces.filter((place) => types.includes(place.type));
+    return [];
   }
 }
 
@@ -155,7 +135,7 @@ export async function fetchProductById(id: string): Promise<Product> {
     return buildProductFromSource(source);
   }
 
-  const fallback = fallbackProducts.find((product) => product.id === id);
+  const fallback = undefined;
   if (fallback) {
     return fallback;
   }
@@ -169,11 +149,10 @@ export async function fetchStoryById(id: string): Promise<Story> {
     return buildStoryFromSource(source);
   }
 
-  const fallback = fallbackStories.find((story) => story.id === id);
+  const fallback = undefined;
   if (fallback) {
     return fallback;
   }
 
   throw new Error(`História "${id}" não encontrada.`);
 }
- 

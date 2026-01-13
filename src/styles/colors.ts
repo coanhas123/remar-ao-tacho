@@ -1,6 +1,6 @@
 export const palette = {
   backgroundLight: '#F5F5F5',
-  backgroundDark: '#0F1216',
+  backgroundDark: '#000000ff',
   black: '#000000',
   white: '#FFFFFF',
   pink: '#EE448D',
@@ -13,10 +13,10 @@ export const palette = {
 
 export const semanticColors = {
   background: palette.backgroundDark,
-  card: '#151A21',
-  elevatedCard: '#1A1F27',
-  muted: '#505866',
-  border: '#232832',
+  card: '#000000ff',
+  elevatedCard: '#000000ff',
+  muted: '#ffffffff',
+  border: '#000000ff',
   overlay: 'rgba(0, 0, 0, 0.5)',
   text: palette.white,
   textMuted: '#C9D1D9',

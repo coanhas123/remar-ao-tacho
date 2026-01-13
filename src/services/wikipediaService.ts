@@ -3,10 +3,7 @@ const REQUEST_TIMEOUT_MS = 3000;
 
 const USER_AGENT = process.env.EXPO_PUBLIC_USER_AGENT || "";
 
-/**
- * Cleans HTML markup from text by removing tags between < and >
- * Uses startsWith/endsWith to detect and filter HTML elements
- */
+
 const cleanHTMLTags = (text: string): string => {
   if (!text || typeof text !== "string") return text;
 
@@ -15,10 +12,10 @@ const cleanHTMLTags = (text: string): string => {
 
   while (i < text.length) {
     if (text[i].startsWith("<")) {
-      // Found opening bracket, find closing bracket
+      
       const closeIndex = text.indexOf(">", i);
       if (closeIndex !== -1) {
-        i = closeIndex + 1; // Skip the entire tag
+        i = closeIndex + 1; 
         continue;
       }
     }
@@ -148,6 +145,34 @@ export async function PortugueseMeals() {
     return data;
   } catch (error) {
     console.warn("Failed to fetch meals", error);
+  }
+}
+export async function searchWikipediaGastronomia(searchTerm: string): Promise<string[]> {
+  try {
+    const response = await fetch(
+      `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
+        searchTerm
+      )}&srnamespace=0&srlimit=10&format=json`,
+      {
+        headers: {
+          "User-Agent":
+            "RemarAoTacho/1.0 (contact: info@remaraotacho.com; educational project)",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Erro ao buscar na Wikipedia");
+    }
+
+    const data = await response.json();
+    const results = data.query?.search || [];
+    
+    return results.map((item: any) => item.title);
+  } catch (error) {
+    console.log("Erro na busca:", error);
+    return [];
   }
 }
 

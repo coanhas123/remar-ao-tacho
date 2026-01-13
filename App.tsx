@@ -1,4 +1,5 @@
 import { queryClient } from '@/src/config/queryClient';
+import { MoodboardProvider } from '@/src/context';
 import { AppNavigator } from '@/src/navigation';
 import { ThemeProvider, createNavigationTheme, useTheme } from '@/src/styles';
 import { Sora_400Regular, Sora_500Medium } from '@expo-google-fonts/sora';
@@ -55,7 +56,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <SafeAreaProvider>
-          <RootNavigation />
+          <MoodboardProvider>
+            <RootNavigation />
+          </MoodboardProvider>
         </SafeAreaProvider>
       </ThemeProvider>
     </QueryClientProvider>

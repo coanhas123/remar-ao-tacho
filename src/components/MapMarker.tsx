@@ -6,9 +6,9 @@ import { LatLng, MapMarkerProps, Marker } from 'react-native-maps';
 import { Landmark, ShoppingBag, Utensils } from 'lucide-react-native';
 
 const markerColors: Record<PlaceType, string> = {
-  loja: '#F6ED44',      // Amarelo
-  restaurante: '#F99D2F', // Laranja
-  historico: '#662D91',   // Roxo
+  loja: '#F6ED44',      
+  restaurante: 'orange',
+  historico: 'darkviolet',   
 };
 
 // Função para escolher o ícone com base na categoria
@@ -17,7 +17,7 @@ const getIcon = (type: PlaceType, color: string) => {
   switch (type) {
     case 'restaurante': return <Utensils color={color} size={size} />;
     case 'loja': return <ShoppingBag color={color} size={size} />;
-    case 'historico': return <Landmark color="#FFFFFF" size={size} />; // Branco no roxo para contraste
+    case 'historico': return <Landmark color="#FFFFFF" size={size} />; 
     default: return null;
   }
 };
@@ -25,7 +25,7 @@ const getIcon = (type: PlaceType, color: string) => {
 interface Props extends Omit<MapMarkerProps, 'coordinate'> {
   coordinate: LatLng;
   type: PlaceType;
-  onPress?: () => void; // Para abrir a card ao clicar
+  onPress?: () => void; 
 }
 
 export const MapMarker = ({ coordinate, type, onPress, ...markerProps }: Props) => {
@@ -37,11 +37,11 @@ export const MapMarker = ({ coordinate, type, onPress, ...markerProps }: Props) 
     <Marker 
       coordinate={coordinate} 
       onPress={onPress} 
-      tracksViewChanges={false} // Melhora a performance do mapa
+      tracksViewChanges={false} 
       {...markerProps}
     >
       <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-        {/* O "Pino" com Ícone */}
+        
         <View
           style={{
             backgroundColor: backgroundColor,
@@ -50,8 +50,8 @@ export const MapMarker = ({ coordinate, type, onPress, ...markerProps }: Props) 
             borderRadius: 18,
             alignItems: 'center',
             justifyContent: 'center',
-            elevation: 4, // Sombra no Android
-            shadowColor: '#000', // Sombra no iOS
+            elevation: 4, 
+            shadowColor: '#000', 
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.25,
             shadowRadius: 3.84,
@@ -60,7 +60,7 @@ export const MapMarker = ({ coordinate, type, onPress, ...markerProps }: Props) 
           {getIcon(type, iconColor)}
         </View>
         
-        {/* A pontinha do marcador (Triângulo) */}
+        
         <View
           style={{
             width: 0,
@@ -71,7 +71,7 @@ export const MapMarker = ({ coordinate, type, onPress, ...markerProps }: Props) 
             borderLeftColor: 'transparent',
             borderRightColor: 'transparent',
             borderTopColor: backgroundColor,
-            marginTop: -1, // Faz o triângulo encaixar no círculo
+            marginTop: -1, 
           }}
         />
       </View>

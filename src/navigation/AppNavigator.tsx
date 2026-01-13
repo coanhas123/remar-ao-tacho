@@ -1,17 +1,19 @@
 import { BottomTabBar } from "@/src/components";
 import {
-  ExploreScreen,
-  HistoryDetailScreen,
+  // ExploreScreen,
   HomeScreen,
   MapScreen,
   MoodboardDetailScreen,
   ProductModalScreen,
   ProfileScreen,
+  SplashScreen,
 } from "@/src/screens";
 import { useTheme } from "@/src/styles";
 import { Feather } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useState } from "react";
+import { Image, View } from "react-native";
 
 export type RootTabParamList = {
   Home: undefined;
@@ -24,6 +26,7 @@ export type RootTabParamList = {
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 export type RootStackParamList = {
+  Splash: undefined;
   Tabs: undefined;
   HistoryDetail: { storyId: string };
   ProductModal: {
@@ -41,17 +44,12 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const TabNavigator = () => {
-  const theme = useTheme();
-
   return (
     <Tab.Navigator
       initialRouteName="Home"
       tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{
-        headerStyle: { backgroundColor: theme.colors.background },
-        headerTintColor: theme.colors.text,
-        headerTitleStyle: { fontFamily: theme.typography.fonts.heading },
-        headerShadowVisible: false,
+        headerShown: false,
       }}
     >
       <Tab.Screen
@@ -65,18 +63,8 @@ const TabNavigator = () => {
           title: "Roteiro Aveiro",
         }}
       />
-
-      <Tab.Screen
-        name="Explorar"
-        component={ExploreScreen}
-        options={{
-          tabBarLabel: "Explorar",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="grid" color={color} size={size} />
-          ),
-          title: "Explorar",
-        }}
-      />
+      
+      
       <Tab.Screen
         name="Mapa"
         component={MapScreen}
@@ -105,20 +93,45 @@ const TabNavigator = () => {
 
 export const AppNavigator = () => {
   const theme = useTheme();
+  const [showSplash, setShowSplash] = useState(true);
+
+  if (showSplash) {
+    return (
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animationEnabled: false,
+        }}
+      >
+        <Stack.Screen
+          name="Splash"
+          options={{ animationEnabled: false }}
+        >
+          {() => <SplashScreen onFinish={() => setShowSplash(false)} />}
+        </Stack.Screen>
+      </Stack.Navigator>
+    );
+  }
 
   return (
     <Stack.Navigator
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
         contentStyle: { backgroundColor: theme.colors.background },
+        headerTitle: () => (
+          <View style={{ paddingVertical: 16 }}>
+            <Image
+              source={require('../../assets/Logo/remaraotachologo.png')}
+              style={{ width: 130, height: 80, paddingVertical: 14, paddingHorizontal: 15 }}
+              resizeMode="contain"
+            />
+          </View>
+        ),
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerTitleAlign: "center",
       }}
     >
       <Stack.Screen name="Tabs" component={TabNavigator} />
-      <Stack.Screen
-        name="HistoryDetail"
-        component={HistoryDetailScreen}
-        options={{ headerShown: false }}
-      />
       <Stack.Screen
         name="ProductModal"
         component={ProductModalScreen}

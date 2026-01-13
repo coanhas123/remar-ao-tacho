@@ -22,7 +22,7 @@ const baseTheme: AppTheme = {
   typography,
   shadows: {
     soft: '0 8px 24px rgba(0, 0, 0, 0.25)',
-    medium: '0 16px 48px rgba(0, 0, 0, 0.35)',
+    medium: '0 16px 48px rgba(0, 0, 0, 1)',
   },
 };
 

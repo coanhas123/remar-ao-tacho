@@ -1,7 +1,8 @@
 import { useTheme } from '@/src/styles';
 import { Moodboard } from '@/src/types/content';
 import { Ionicons } from '@expo/vector-icons';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Pressable, Text, View } from 'react-native';
 
 type MoodboardCardVariant = 'carousel' | 'feed';
 
@@ -32,6 +33,7 @@ export const MoodboardCard = ({ moodboard, onPress, variant = 'carousel' }: Prop
             key={index}
             source={{ uri: product.image }}
             style={{ width: '50%', height: '50%' }}
+            contentFit="cover"
           />
         ))}
       </View>
