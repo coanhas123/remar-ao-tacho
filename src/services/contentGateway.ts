@@ -3,9 +3,6 @@ import { Place, PlaceType, Product, Story } from "@/src/types/content";
 import { fetchPlacesByTypes } from "./overpassService";
 import { fetchWikipediaSummary } from "./wikipediaService";
 
-export const DEFAULT_IMAGE =
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60";
-
 const sanitizeImageUrl = (value?: string | null): string | null => {
   if (!value || typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -24,7 +21,7 @@ const resolveImageSource = (
       return sanitized;
     }
   }
-  return DEFAULT_IMAGE;
+  throw new Error("No valid image source available");
 };
 
 async function buildProductFromSource(
@@ -35,7 +32,6 @@ async function buildProductFromSource(
 
     const resolvedImage = resolveImageSource(
       source.fallbackImage,
-      undefined,
       summary?.thumbnail
     );
 
@@ -48,7 +44,6 @@ async function buildProductFromSource(
       category: source.category,
       location: source.location,
       sourceUrl: summary?.url,
-      imageAttribution: undefined,
       tags: source.tags,
     } satisfies Product;
   } catch (error) {
@@ -62,7 +57,6 @@ async function buildProductFromSource(
       category: source.category,
       location: source.location,
       sourceUrl: undefined,
-      imageAttribution: undefined,
       tags: source.tags,
     } satisfies Product;
   }
@@ -78,7 +72,6 @@ async function buildStoryFromSource(
 
     const resolvedImage = resolveImageSource(
       source.fallbackImage,
-      undefined,
       summary?.thumbnail
     );
 
@@ -90,7 +83,6 @@ async function buildStoryFromSource(
       image: resolvedImage,
       summary: summary?.extract ?? source.fallbackSummary,
       sourceUrl: summary?.url,
-      mediaAttribution: undefined,
     } satisfies Story;
   } catch (error) {
     console.warn(`Failed to build story ${source.id}`, error);
@@ -102,7 +94,6 @@ async function buildStoryFromSource(
       image: resolveImageSource(source.fallbackImage),
       summary: source.fallbackSummary ?? "",
       sourceUrl: undefined,
-      mediaAttribution: undefined,
     } satisfies Story;
   }
 }
@@ -135,11 +126,6 @@ export async function fetchProductById(id: string): Promise<Product> {
     return buildProductFromSource(source);
   }
 
-  const fallback = undefined;
-  if (fallback) {
-    return fallback;
-  }
-
   throw new Error(`Produto "${id}" não encontrado.`);
 }
 
@@ -147,11 +133,6 @@ export async function fetchStoryById(id: string): Promise<Story> {
   const source = storySources.find((item) => item.id === id);
   if (source) {
     return buildStoryFromSource(source);
-  }
-
-  const fallback = undefined;
-  if (fallback) {
-    return fallback;
   }
 
   throw new Error(`História "${id}" não encontrada.`);

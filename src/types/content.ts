@@ -9,7 +9,6 @@ export interface Product {
   category: ProductCategory;
   location: string;
   sourceUrl?: string;
-  imageAttribution?: string;
   tags?: string[];
 }
 
@@ -23,10 +22,9 @@ export interface Story {
   image: string;
   summary: string;
   sourceUrl?: string;
-  mediaAttribution?: string;
 }
 
-export type PlaceType = 'loja' | 'restaurante' | 'historico';
+export type PlaceType = 'restaurante' | 'historico';
 
 export interface Place {
   id: string;
@@ -44,11 +42,9 @@ export interface Place {
 export interface Moodboard {
   id: string;
   title: string;
-  count: number;
-  accentColor: string;
+  color?: string;
   coverImage?: string;
-  description?: string;
-  productIds?: string[];
-  updatedAt?: string;
-  products?: Product[];
+  products: Product[];
+  createdAt: number;
+  updatedAt: number;
 }

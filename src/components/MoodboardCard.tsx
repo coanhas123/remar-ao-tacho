@@ -21,7 +21,7 @@ export const MoodboardCard = ({ moodboard, onPress, variant = 'carousel' }: Prop
     const images = (moodboard.products ?? []).slice(0, 4); // Show up to 4 images when available
     if (images.length === 0) {
       return (
-        <View style={{ width: 64, height: 64, borderRadius: theme.radii.md, backgroundColor: moodboard.accentColor, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: 64, height: 64, borderRadius: theme.radii.md, backgroundColor: moodboard.color ?? theme.colors.accentPrimary, justifyContent: 'center', alignItems: 'center' }}>
           <Ionicons name="image-outline" size={32} color="white" />
         </View>
       );
@@ -68,7 +68,7 @@ export const MoodboardCard = ({ moodboard, onPress, variant = 'carousel' }: Prop
         {moodboard.title}
       </Text>
       <Text style={{ color: theme.colors.textMuted, marginTop: theme.spacing.xs }}>
-        {moodboard.count} guardados
+        {moodboard.products.length} guardados
       </Text>
     </Pressable>
   );

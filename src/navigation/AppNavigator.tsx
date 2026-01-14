@@ -9,6 +9,7 @@ import {
   SplashScreen,
 } from "@/src/screens";
 import { useTheme } from "@/src/styles";
+import { Product } from "@/src/types/content";
 import { Feather } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -17,8 +18,6 @@ import { Image, View } from "react-native";
 
 export type RootTabParamList = {
   Home: undefined;
-  Test: undefined;
-  Explorar: undefined;
   Mapa: undefined;
   Perfil: undefined;
 };
@@ -28,15 +27,8 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 export type RootStackParamList = {
   Splash: undefined;
   Tabs: undefined;
-  HistoryDetail: { storyId: string };
   ProductModal: {
-    product: {
-      title: string;
-      description: string;
-      extract: string;
-      url: string;
-      thumbnail: string;
-    };
+    product: Product;
   };
   MoodboardDetail: { moodboardId: string };
 };
@@ -100,12 +92,10 @@ export const AppNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          animationEnabled: false,
         }}
       >
         <Stack.Screen
           name="Splash"
-          options={{ animationEnabled: false }}
         >
           {() => <SplashScreen onFinish={() => setShowSplash(false)} />}
         </Stack.Screen>

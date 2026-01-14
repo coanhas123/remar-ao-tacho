@@ -1,6 +1,7 @@
 import { useMoodboards } from '@/src/context';
 import { RootStackParamList } from '@/src/navigation';
 import { useTheme } from '@/src/styles';
+import { Product } from '@/src/types/content';
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -142,10 +143,10 @@ export const MoodboardDetailScreen = () => {
         ) : (
           <>
             <View style={styles.grid}>
-              {products.map((product) => (
+              {products.map((product: Product) => (
                 <View key={product.id} style={styles.gridItem}>
                   <TouchableOpacity 
-                    onPress={() => navigation.navigate('ProductModal', { product: product as any })}
+                    onPress={() => navigation.navigate('ProductModal', { product })}
                     onLongPress={() => handleSelectCoverImage(product.image)}
                     delayLongPress={500}
                     style={{ flex: 1 }}
@@ -171,9 +172,9 @@ export const MoodboardDetailScreen = () => {
                         📍 {product.location}
                       </Text>
                     )}
-                    {(product.extract || product.description) && (
+                    {product.description && (
                       <Text style={[styles.productDescription, { color: theme.colors.textMuted }]} numberOfLines={2}>
-                        {product.extract || product.description}
+                        {product.description}
                       </Text>
                     )}
                   </View>

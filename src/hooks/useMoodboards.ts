@@ -1,24 +1,6 @@
+import { Moodboard, Product } from '@/src/types/content';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
-
-export interface Product {
-  id: string;
-  title: string;
-  image: string;
-  location?: string;
-  description?: string;
-  extract?: string;
-}
-
-export interface Moodboard {
-  id: string;
-  title: string;
-  coverImage?: string;
-  color?: string;
-  products: Product[];
-  createdAt: number;
-  updatedAt: number;
-}
 
 const STORAGE_KEY = '@moodboards';
 

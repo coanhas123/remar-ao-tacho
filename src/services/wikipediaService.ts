@@ -1,8 +1,6 @@
 
 const REQUEST_TIMEOUT_MS = 3000;
 
-const USER_AGENT = process.env.EXPO_PUBLIC_USER_AGENT || "";
-
 
 const cleanHTMLTags = (text: string): string => {
   if (!text || typeof text !== "string") return text;
@@ -24,20 +22,6 @@ const cleanHTMLTags = (text: string): string => {
   }
 
   return cleaned.trim();
-};
-
-const fetchWithTimeout = async (
-  url: string,
-  options: RequestInit = {},
-  timeoutMs = REQUEST_TIMEOUT_MS
-) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...options, signal: controller.signal });
-  } finally {
-    clearTimeout(timeoutId);
-  }
 };
 
 interface WikipediaSummaryResponse {
@@ -85,66 +69,6 @@ export async function fetchWikipediaSummary(
     };
   } catch {
     return null;
-  }
-}
-
-export async function searchCommonsImage(
-  term: string | string[],
-  targetWidth = 1200
-): Promise<{ url: string; attribution?: string } | null> {
-  const searchTerm = Array.isArray(term) ? term[0] : term;
-  const params = new URLSearchParams({
-    action: "query",
-    generator: "search",
-    gsrlimit: "1",
-    gsrsearch: searchTerm,
-    prop: "imageinfo",
-    iiprop: "url|extmetadata",
-    iiurlwidth: String(targetWidth),
-    format: "json",
-    origin: "*",
-  });
-
-  try {
-    const response = await fetchWithTimeout(
-      `https://commons.wikimedia.org/w/api.php?${params.toString()}`,
-      {
-        headers: { "User-Agent": USER_AGENT },
-      }
-    );
-
-    if (
-      !response.ok ||
-      !response.headers.get("content-type")?.includes("application/json")
-    )
-      return null;
-
-    const data = await response.json();
-    const firstPage = Object.values(data?.query?.pages || {})[0] as any;
-    const image = firstPage?.imageinfo?.[0];
-
-    if (!image?.url) return null;
-
-    return {
-      url: image.thumburl ?? image.url,
-      attribution: image.extmetadata?.Artist?.value || undefined,
-    };
-  } catch {
-    return null;
-  }
-}
-
-export async function PortugueseMeals() {
-  try {
-    const result = await fetch(
-      "https://www.themealdb.com/api/json/v1/1/filter.php?a=Portuguese",
-      { method: "GET" }
-    );
-    const data = await result.json();
-    console.log(data);
-    return data;
-  } catch (error) {
-    console.warn("Failed to fetch meals", error);
   }
 }
 export async function searchWikipediaGastronomia(searchTerm: string): Promise<string[]> {

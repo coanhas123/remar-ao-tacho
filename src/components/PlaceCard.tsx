@@ -9,7 +9,6 @@ interface Props {
 }
 
 const placeTypeLabels: Record<Place['type'], string> = {
-  loja: 'Loja típica',
   restaurante: 'Restaurante',
   historico: 'Património',
 };

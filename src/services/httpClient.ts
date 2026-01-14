@@ -1,10 +1,7 @@
 const DEFAULT_TIMEOUT = 12000;
 
-type HttpMethod = 'GET' | 'POST';
-
 interface HttpRequestOptions extends RequestInit {
   timeoutMs?: number;
-  method?: HttpMethod;
 }
 
 class HttpError extends Error {
@@ -35,18 +32,6 @@ export async function fetchJson<T>(url: string, options: HttpRequestOptions = {}
   } finally {
     clearTimeout(timeoutId);
   }
-}
-
-export async function postForm<T>(url: string, body: string, options: HttpRequestOptions = {}): Promise<T> {
-  return fetchJson<T>(url, {
-    ...options,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      ...(options.headers ?? {}),
-    },
-    body,
-  });
 }
 
 export function safeParse<T>(promise: Promise<T>): Promise<T | null> {

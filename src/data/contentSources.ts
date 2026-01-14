@@ -1,11 +1,8 @@
 import { PlaceType, ProductCategory, StoryCategory } from '@/src/types/content';
 
-type CommonsSearch = string | string[];
-
 export interface ProductSource {
   id: string;
   wikiTitle: string;
-  commonsSearch: CommonsSearch;
   category: ProductCategory;
   location: string;
   fallbackTitle: string;
@@ -18,7 +15,6 @@ export interface ProductSource {
 export interface StorySource {
   id: string;
   wikiTitle?: string;
-  commonsSearch?: CommonsSearch;
   category: StoryCategory;
   fallbackTitle: string;
   fallbackSummary: string;
@@ -30,7 +26,6 @@ export const productSources: ProductSource[] = [
   {
     id: 'ovos-moles',
     wikiTitle: 'Ovos_moles',
-    commonsSearch: ['Ovos moles Aveiro', 'Aveiro convent sweets'],
     category: 'doce',
     location: 'Oficinas da Praça do Peixe',
     fallbackTitle: 'Ovos Moles de Aveiro',
@@ -42,7 +37,6 @@ export const productSources: ProductSource[] = [
   {
     id: 'raia-molho-pardo',
     wikiTitle: 'Raia',
-    commonsSearch: ['Raia preparada Aveiro', 'Raia molho pardo'],
     category: 'mar',
     location: 'Salpoente',
     fallbackTitle: 'Raia de Molho Pardo',
@@ -54,7 +48,6 @@ export const productSources: ProductSource[] = [
   {
     id: 'caldeirada-enguias',
     wikiTitle: 'Caldeirada',
-    commonsSearch: ['Caldeirada enguias Aveiro', 'Eel stew Portugal'],
     category: 'tradicional',
     location: 'Mercado do Peixe',
     fallbackTitle: 'Caldeirada de Enguias',
@@ -66,7 +59,6 @@ export const productSources: ProductSource[] = [
   {
     id: 'pao-lo-ovar',
     wikiTitle: 'Pão-de-ló',
-    commonsSearch: ['Pão de Ló de Ovar', 'Ovar sponge cake'],
     category: 'doce',
     location: 'Ovar',
     fallbackTitle: 'Pão de Ló de Ovar',
@@ -81,7 +73,6 @@ export const storySources: StorySource[] = [
   {
     id: 'mulheres-salinas',
     wikiTitle: 'Marinha_Santiago_da_Fontinha',
-    commonsSearch: ['Aveiro salt workers', 'Marnoteiras Aveiro'],
     category: 'cultura',
     fallbackTitle: 'Mulheres das Salinas',
     fallbackSummary: 'As marnoteiras que guardam o brilho branco e a memória do sal.',
@@ -91,7 +82,6 @@ export const storySources: StorySource[] = [
   {
     id: 'segredos-moliceiros',
     wikiTitle: 'Moliceiro',
-    commonsSearch: ['Moliceiro boat Aveiro', 'Pinturas moliceiro'],
     category: 'historia',
     fallbackTitle: 'Os segredos dos Moliceiros',
     fallbackSummary: 'Embarcações que passaram do transporte de moliço às narrativas satíricas.',
@@ -101,7 +91,6 @@ export const storySources: StorySource[] = [
   {
     id: 'rota-acucar',
     wikiTitle: 'Ovos_moles',
-    commonsSearch: ['Doces conventuais Aveiro', 'Convent sweets Aveiro'],
     category: 'historia',
     fallbackTitle: 'O caminho do açúcar',
     fallbackSummary: 'Da cana atlântica aos claustros que moldaram os doces de gema.',
@@ -118,7 +107,6 @@ export const aveiroBoundingBox = {
 };
 
 export const placeTypeFilters: Record<PlaceType, string[]> = {
-  loja: ['shop=pastry', 'shop=convenience', 'craft=confectionery'],
   restaurante: ['amenity=restaurant', 'amenity=cafe'],
   historico: ['tourism=museum', 'historic=*'],
 };

@@ -53,9 +53,6 @@ export const StoryCard = ({ story, onPress }: Props) => {
         </Text>
         <Text style={{ color: theme.colors.textMuted, marginTop: theme.spacing.xs }}>{story.date}</Text>
         <Text style={{ color: theme.colors.textMuted, marginTop: theme.spacing.sm }}>{story.summary}</Text>
-        {story.mediaAttribution && (
-          <Text style={{ color: theme.colors.statusInfo, marginTop: theme.spacing.xs }}>Fonte: {story.mediaAttribution}</Text>
-        )}
       </View>
     </Pressable>
   );

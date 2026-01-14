@@ -1,6 +1,5 @@
 import { aveiroBoundingBox, placeTypeFilters } from '@/src/data/contentSources';
 import { Place, PlaceType } from '@/src/types/content';
-import { postForm } from './httpClient';
 
 interface OverpassElement {
   id: number;
@@ -21,7 +20,6 @@ interface OverpassResponse {
 const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter';
 
 const placeDescriptions: Record<PlaceType, string> = {
-  loja: 'Lojas e oficinas típicas da região',
   restaurante: 'Restaurantes e casas de caldeirada',
   historico: 'Património e espaços culturais',
 };
@@ -88,11 +86,17 @@ export async function fetchPlacesByTypes(types: PlaceType[]): Promise<Place[]> {
   let lastError;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const response = await postForm<OverpassResponse>(OVERPASS_ENDPOINT, `data=${encodeURIComponent(query)}`);
+      const response = await fetch(OVERPASS_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        },
+        body: `data=${encodeURIComponent(query)}`,
+      }).then((res) => res.json() as Promise<OverpassResponse>);
 
       const payload = response.elements
-        .filter((element) => (element.lat && element.lon) || element.center)
-        .map((element) => {
+        .filter((element: OverpassElement) => (element.lat && element.lon) || element.center)
+        .map((element: OverpassElement) => {
           const tags = element.tags ?? {};
           const inferredType = inferTypeFromTags(types, tags);
           const latitude = element.lat ?? element.center?.lat ?? 0;
@@ -129,11 +133,17 @@ export async function fetchPlacesByTypes(types: PlaceType[]): Promise<Place[]> {
   
   try {
     const query2 = buildQuery(types);
-    const response = await postForm<OverpassResponse>('https://overpass.kumi.systems/api/interpreter', `data=${encodeURIComponent(query2)}`);
+    const response = await fetch('https://overpass.kumi.systems/api/interpreter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      },
+      body: `data=${encodeURIComponent(query2)}`,
+    }).then((res) => res.json() as Promise<OverpassResponse>);
     
     const payload = response.elements
-      .filter((element) => (element.lat && element.lon) || element.center)
-      .map((element) => {
+      .filter((element: OverpassElement) => (element.lat && element.lon) || element.center)
+      .map((element: OverpassElement) => {
         const tags = element.tags ?? {};
         const inferredType = inferTypeFromTags(types, tags);
         const latitude = element.lat ?? element.center?.lat ?? 0;

@@ -54,12 +54,12 @@ export const ProductModalScreen = () => {
   useEffect(() => {
     const loadWikipediaData = async () => {
       // Se o produto já vem com dados do Wikipedia, usar esses
-      if (product.extract || (product as any).extract) {
+      if (product.description) {
         setWikiData({
-          extract: product.extract || (product as any).extract,
-          description: product.description || (product as any).description,
-          image: (product as any).thumbnail || (product as any).image,
-          sourceUrl: (product as any).url,
+          extract: product.description,
+          description: product.description,
+          image: product.image,
+          sourceUrl: product.sourceUrl,
           wikiTitle: product.title,
         });
       } else {
@@ -83,7 +83,7 @@ export const ProductModalScreen = () => {
       <View style={styles.heroImage}>
         <Image
           source={{
-            uri: (product as any).thumbnail || (product as any).image,
+            uri: product.image,
             headers: {
               "User-Agent": "RemarAoTacho/1.0 (contact: info@remaraotacho.com)",
             },
@@ -112,9 +112,9 @@ export const ProductModalScreen = () => {
 
     
       <View style={{ padding: 20 }}>
-        {(wikiData?.extract || product.extract || product.description) && (
+        {(wikiData?.extract || product.description) && (
           <Text style={{ color: theme.colors.text, fontSize: 16, lineHeight: 24, marginTop: 12 }}>
-            {wikiData?.extract || product.extract || product.description}
+            {wikiData?.extract || product.description}
           </Text>
         )}
 

@@ -3,10 +3,9 @@ import { PlaceType } from '@/src/types/content';
 import { View } from 'react-native';
 import { LatLng, MapMarkerProps, Marker } from 'react-native-maps';
 // Exemplo usando Lucide, mas podes usar MaterialIcons ou FontAwesome
-import { Landmark, ShoppingBag, Utensils } from 'lucide-react-native';
+import { Landmark, Utensils } from 'lucide-react-native';
 
 const markerColors: Record<PlaceType, string> = {
-  loja: '#F6ED44',      
   restaurante: 'orange',
   historico: 'darkviolet',   
 };
@@ -16,7 +15,6 @@ const getIcon = (type: PlaceType, color: string) => {
   const size = 18;
   switch (type) {
     case 'restaurante': return <Utensils color={color} size={size} />;
-    case 'loja': return <ShoppingBag color={color} size={size} />;
     case 'historico': return <Landmark color="#FFFFFF" size={size} />; 
     default: return null;
   }

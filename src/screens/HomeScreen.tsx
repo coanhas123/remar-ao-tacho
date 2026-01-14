@@ -4,18 +4,19 @@ import { useLikedProducts } from "@/src/hooks";
 import { RootStackParamList } from "@/src/navigation";
 import { fetchWikipediaTiti } from "@/src/services/wikipediaService";
 import { useTheme } from "@/src/styles";
+import { Product } from "@/src/types/content";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    Animated,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Animated,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -26,6 +27,17 @@ type Tipo = {
   url: string;
   thumbnail: string;
 };
+
+const tipoToProduct = (tipo: Tipo): Product => ({
+  id: `wiki-${tipo.title.replace(/\s+/g, '-').toLowerCase()}`,
+  title: tipo.title,
+  subtitle: tipo.description,
+  description: tipo.extract,
+  image: tipo.thumbnail,
+  category: 'tradicional',
+  location: 'Aveiro',
+  sourceUrl: tipo.url,
+});
 
 export const HomeScreen = () => {
   const theme = useTheme();
@@ -274,7 +286,7 @@ export const HomeScreen = () => {
                       <TouchableOpacity
                         onPress={() =>
                           navigation.navigate("ProductModal", {
-                            product: heroInfo,
+                            product: tipoToProduct(heroInfo),
                           })
                         }
                         style={[
@@ -341,7 +353,7 @@ export const HomeScreen = () => {
                       <TouchableOpacity
                         onPress={() =>
                           navigation.navigate("ProductModal", {
-                            product: food,
+                            product: tipoToProduct(food),
                           })
                         }
                         activeOpacity={0.8}
@@ -436,7 +448,7 @@ export const HomeScreen = () => {
                   <TouchableOpacity
                     onPress={() =>
                       navigation.navigate("ProductModal", {
-                        product: fact,
+                        product: tipoToProduct(fact),
                       })
                     }
                     activeOpacity={0.8}
